@@ -22,6 +22,10 @@ public class BankCard {
         this.balance = balance;
     }
 
+    public void addIncome(long income) {
+        this.balance += income;
+    }
+
     public BankCard() {
         cardId = generateCardId();
         cardPin = generatePin();
@@ -60,4 +64,8 @@ public class BankCard {
         return pin.toString();
     }
 
+    public void checkMoneyToTransfer(int transferMoney) {
+        if (balance - transferMoney < 0)
+            throw new IllegalStateException("Not enough money!");
+    }
 }

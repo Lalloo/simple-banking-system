@@ -1,9 +1,12 @@
 import dao.impl.BankCardDaoImpl;
 import domain.BankCard;
+import exception.MyException;
 import util.DataBaseUtil;
 import util.LuhnAlgorithm;
 
 import java.util.InputMismatchException;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Scanner;
 
 public class BankApp {
@@ -13,10 +16,10 @@ public class BankApp {
 
     public BankApp(String[] args) {
         DataBaseUtil.setURL(args);
+        bankCardDao = new BankCardDaoImpl();
     }
 
     public void run() {
-        bankCardDao = new BankCardDaoImpl();
         while (true) {
             System.out.println("1. Create an account");
             System.out.println("2. Log into account");
@@ -49,11 +52,12 @@ public class BankApp {
         String loginCard = SCANNER.next();
         System.out.println("Enter your PIN:");
         String loginPin = SCANNER.next();
-        card = bankCardDao.get(loginCard);
-        if (card == null || !card.getCardPin().equals(loginPin)) {
+        Optional<BankCard> optionalBankCard = bankCardDao.get(loginCard);
+        if (optionalBankCard.isEmpty() || !optionalBankCard.get().getCardPin().equals(loginPin)) {
             System.out.println("\nWrong card number or PIN!");
             return false;
         }
+        card = optionalBankCard.get();
         System.out.println("\nYou have successfully logged in!");
         while (true) {
             System.out.println("\n1. Balance");
@@ -87,6 +91,8 @@ public class BankApp {
                 }
             } catch (InputMismatchException e) {
                 System.out.println("\nPlease enter number 0-5");
+            } catch (NoSuchElementException | IllegalStateException | MyException e) {
+                System.out.println(e.getMessage());
             }
         }
     }
@@ -99,34 +105,22 @@ public class BankApp {
 
     private void addIncome() {
         System.out.println("\nEnter income:");
-        int income = SCANNER.nextInt();
-        bankCardDao.update(card, income);
-        card.setBalance(card.getBalance() + income);
+        card.addIncome(SCANNER.nextInt());
+        bankCardDao.save(card);
     }
 
-    private void transfer() {
+    private void transfer()  {
         System.out.println("Transfer");
         System.out.println("Enter card number:");
         String transferCard = SCANNER.next();
-        if (card.getCardId().equals(transferCard)) {
-            System.out.println("You can't transfer money to the same account!");
-            return;
-        }
-        if (!LuhnAlgorithm.checkNumberValid(transferCard)) {
-            System.out.println("Probably you made a mistake in the card number. Please try again!");
-            return;
-        }
-        if (bankCardDao.get(transferCard) == null) {
-            System.out.println("Such a card does not exist.");
-            return;
-        }
-
-
+        if (card.getCardId().equals(transferCard))
+            throw new IllegalStateException("You can't transfer money to the same account!");
+        if (!LuhnAlgorithm.checkNumberValid(transferCard))
+            throw new IllegalStateException("Probably you made a mistake in the card number. Please try again!");
+        bankCardDao.get(transferCard)
+                .orElseThrow(() -> new MyException("Such a card does not exist."));
         int transferMoney = SCANNER.nextInt();
-        if (card.getBalance() - transferMoney < 0) {
-            System.out.println("Not enough money!");
-            return;
-        }
+        card.checkMoneyToTransfer(transferMoney);
         if (bankCardDao.doTransfer(card, transferCard, transferMoney)) {
             card.setBalance(card.getBalance() - transferMoney);
             System.out.println("Success!");

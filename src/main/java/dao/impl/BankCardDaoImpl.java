@@ -4,7 +4,9 @@ import dao.BankCardsDAO;
 import domain.BankCard;
 import util.DataBaseUtil;
 
+import javax.swing.text.html.Option;
 import java.sql.*;
+import java.util.Optional;
 
 public class BankCardDaoImpl implements BankCardsDAO {
     private final String initTable = "CREATE TABLE IF NOT EXISTS card(" +
@@ -20,7 +22,9 @@ public class BankCardDaoImpl implements BankCardsDAO {
 
     private final String updateBalance = "UPDATE card SET balance = (balance + ?) WHERE number = ?;";
 
-    private final String addCard = "INSERT INTO card(number, pin) VALUES (?,?);";
+    private final String updateCard = "UPDATE card SET balance = ? WHERE number = ?;";
+
+    private final String addCard = "INSERT INTO card(number, pin, balance) VALUES (?,?,?);";
 
 
     public BankCardDaoImpl() {
@@ -81,6 +85,7 @@ public class BankCardDaoImpl implements BankCardsDAO {
              PreparedStatement preparedStatement = connection.prepareStatement(addCard)) {
             preparedStatement.setString(1, card.getCardId());
             preparedStatement.setString(2, card.getCardPin());
+
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -88,7 +93,7 @@ public class BankCardDaoImpl implements BankCardsDAO {
     }
 
     @Override
-    public BankCard get(String loginCard) {
+    public Optional<BankCard> get(String loginCard) {
         BankCard card = null;
         try (Connection connection = DataBaseUtil.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(get);
@@ -107,7 +112,7 @@ public class BankCardDaoImpl implements BankCardsDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return card;
+        return Optional.ofNullable(card);
     }
 
     @Override
