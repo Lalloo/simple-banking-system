@@ -1,6 +1,10 @@
 package dao;
 
-public interface BankCardsDAO {
+import domain.BankCard;
+
+import java.util.List;
+
+public interface BankCardDAO {
     void deleteCardFromDataBase(String cardId);
 
     int getBalance(String loginCard);
@@ -13,9 +17,9 @@ public interface BankCardsDAO {
 
     boolean checkTransferCardNumberInDataBase(String transferCard);
 
-    void addCardToDataBase(String cardId, String cardPin);
+    void save(BankCard card);
 
-    void printDataBaseTable();
+    List<BankCard> getAll();
 
     void deleteDataBaseTable();
 }

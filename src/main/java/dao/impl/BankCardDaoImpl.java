@@ -1,14 +1,18 @@
 package dao.impl;
 
-import dao.BankCardsDAO;
+import dao.BankCardDAO;
+import domain.BankCard;
 import util.DataBaseUtils;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 
-public class BankCardsDAOimpl implements BankCardsDAO {
+public class BankCardDaoImpl implements BankCardDAO {
     private final String initTable = "CREATE TABLE IF NOT EXISTS card(" +
-            "id INTEGER PRIMARY KEY, " +
+            "id INTEGER PRIMARY KEY, " + // todo id has autoincrement
             "number TEXT NOT NULL, " +
             "pin TEXT NOT NULL, " +
             "balance INTEGER DEFAULT 0" +
@@ -22,7 +26,7 @@ public class BankCardsDAOimpl implements BankCardsDAO {
     private final String selectAllDataBaseTable = "SELECT * FROM card;";
 
 
-    public BankCardsDAOimpl() {
+    public BankCardDaoImpl() {
         createTable();
     }
 
@@ -85,6 +89,7 @@ public class BankCardsDAOimpl implements BankCardsDAO {
                         preparedStatement2.setInt(1, transferMoney);
                         preparedStatement2.setString(2, transferCardId);
                         preparedStatement2.executeUpdate();
+                        connection.commit();
                         return true;
                     } catch (SQLException e ) {
                         connection.rollback(savepoint);
@@ -99,11 +104,12 @@ public class BankCardsDAOimpl implements BankCardsDAO {
     }
 
     @Override
-    public void addCardToDataBase(String cardId, String cardPin) {
-        try (Connection connection = DataBaseUtils.getConnection()) {
-            PreparedStatement preparedStatement = connection.prepareStatement(addCard);
-            preparedStatement.setString(1, cardId);
-            preparedStatement.setString(2, cardPin);
+    public void save(BankCard card) {
+        // if new -> INSERT, else UPDATE
+        try (Connection connection = DataBaseUtils.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(addCard)) {
+            preparedStatement.setString(1, card.getCardId());
+            preparedStatement.setString(2, card.getCardPin());
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -112,8 +118,8 @@ public class BankCardsDAOimpl implements BankCardsDAO {
 
     @Override
     public void deleteCardFromDataBase(String cardId) {
-        try (Connection connection = DataBaseUtils.getConnection()) {
-            PreparedStatement preparedStatement = connection.prepareStatement(delete);
+        try (Connection connection = DataBaseUtils.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(delete)) {
             preparedStatement.setString(1, cardId);
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
@@ -159,24 +165,23 @@ public class BankCardsDAOimpl implements BankCardsDAO {
     }
 
     @Override
-    public void printDataBaseTable() {
-        try (Connection connection = DataBaseUtils.getConnection()) {
-            PreparedStatement preparedStatement = connection.prepareStatement(selectAllDataBaseTable);
-            ResultSet card = preparedStatement.executeQuery();
-            while (card.next()) {
-                int i = card.getInt("id");
-                String cardNumber = card.getString("number");
-                String cardPin = card.getString("pin");
-                int balance = card.getInt("balance");
-                System.out.println("\ncard number " + i);
-                System.out.println("id: " + i);
-                System.out.println("cardNumber: " + cardNumber);
-                System.out.println("cardPin: " + cardPin);
-                System.out.println("cardBalance: " + balance + "\n");
+    public List<BankCard> getAll() {
+        List<BankCard> bankCards = new ArrayList<>();
+        try (Connection connection = DataBaseUtils.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(selectAllDataBaseTable);
+             ResultSet resultSet = preparedStatement.executeQuery()) {
+            while (resultSet.next()) {
+                bankCards.add(new BankCard(
+                        resultSet.getInt("id"),
+                        resultSet.getString("number"),
+                        resultSet.getString("pin"),
+                        resultSet.getDouble("balance")
+                ));
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        return bankCards;
     }
 
     @Override
