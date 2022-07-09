@@ -1,18 +1,36 @@
 package domain;
 
+
 import util.LuhnAlgorithm;
 
 import java.util.Random;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class BankCard {
+    private long balance = 0;
+    private static final Random RANDOM = new Random();
+    private static final Supplier<Integer> randomInt = () -> RANDOM.nextInt(10);
+
     private final String cardId;
     private final String cardPin;
-    private final Random RANDOM = new Random();
+    public long getBalance() {
+        return balance;
+    }
+
+    public void setBalance(long balance) {
+        this.balance = balance;
+    }
 
     public BankCard() {
         cardId = generateCardId();
         cardPin = generatePin();
+    }
+
+    public BankCard(String cardId, String cardPin, int balance) {
+        this.cardId = cardId;
+        this.cardPin = cardPin;
+        this.balance = balance;
     }
 
     public String getCardId() {
@@ -25,17 +43,18 @@ public class BankCard {
 
     private String generateCardId() {
         StringBuilder number = new StringBuilder("400000");
-        Stream.generate(() -> RANDOM.nextInt(10))
+        Stream.generate(randomInt)
                 .limit(9)
                 .forEach(number::append);
         number.append(LuhnAlgorithm.generateCheckSum(number));
-        return number.toString();
+        return LuhnAlgorithm.checkNumberValid(number.toString()) ?
+                number.toString() :
+                generateCardId();
     }
 
-    //сделано
     private String generatePin() {
         StringBuilder pin = new StringBuilder();
-        Stream.generate(() -> RANDOM.nextInt(10))
+        Stream.generate(randomInt)
                 .limit(4)
                 .forEach(pin::append);
         return pin.toString();

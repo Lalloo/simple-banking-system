@@ -5,17 +5,18 @@ import org.sqlite.SQLiteDataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-public final class DataBaseUtils {
+public final class DataBaseUtil {
     private static final SQLiteDataSource DATA_SOURCE = new SQLiteDataSource();
     private static final String URL = "jdbc:sqlite:";
 
-    private DataBaseUtils() {}
+    private DataBaseUtil() {
+    }
 
     public static void setURL(String[] args) {
         if (args.length > 1 && args[0].equals("-fileName")) {
-            DataBaseUtils.setUrl(args[1]);
+            DataBaseUtil.setUrl(args[1]);
         } else {
-            DataBaseUtils.setUrl("default.db");
+            DataBaseUtil.setUrl("default.db");
         }
     }
 

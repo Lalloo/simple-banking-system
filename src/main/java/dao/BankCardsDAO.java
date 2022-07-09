@@ -1,21 +1,15 @@
 package dao;
 
+import domain.BankCard;
+
 public interface BankCardsDAO {
-    void deleteCardFromDataBase(String cardId);
+    void delete(BankCard card);
 
-    int getBalance(String loginCard);
+    BankCard get(String loginCard);
 
-    void addIncome(String cardId, int income);
+    void update(BankCard card, int income);
 
-    boolean doTransfer(String loginCardId, String transferCardId, int transferMoney);
+    boolean doTransfer(BankCard card, String transferCardId, int transferMoney);
 
-    boolean checkLoginCardInDataBase(String loginCardId, String loginPin);
-
-    boolean checkTransferCardNumberInDataBase(String transferCard);
-
-    void addCardToDataBase(String cardId, String cardPin);
-
-    void printDataBaseTable();
-
-    void deleteDataBaseTable();
+    void save(BankCard card);
 }

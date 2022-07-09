@@ -1,7 +1,8 @@
 package util;
 
 public final class LuhnAlgorithm {
-    private LuhnAlgorithm() {}
+    private LuhnAlgorithm() {
+    }
 
     public static int generateCheckSum(StringBuilder number) {
         long num = Long.parseLong(number.toString());
